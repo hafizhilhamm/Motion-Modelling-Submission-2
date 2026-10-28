@@ -1,0 +1,14 @@
+# colcon build output, rebuilt by each person
+build/
+install/
+log/
+
+# python cache
+__pycache__/
+*.pyc
+
+# personal editor settings
+.vscode/
+
+# windows download metadata
+*:Zone.Identifier

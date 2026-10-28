@@ -1,0 +1,118 @@
+# This config file is used by traj_demo to generate a trajectory
+# Letter "H" drawn on paper lying on the table: x-y plane at z = 0.05 m
+# Read from behind the robot: up on the page = +x, right on the page = -y
+joint_names: ["fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7"]
+waypoints:
+  cartesion: # meters
+    - position: [0.600, 0.100, 0.050]
+      time: 3.0
+    - position: [0.580, 0.100, 0.050]
+      time: 0.4
+    - position: [0.560, 0.100, 0.050]
+      time: 0.4
+    - position: [0.540, 0.100, 0.050]
+      time: 0.4
+    - position: [0.520, 0.100, 0.050]
+      time: 0.4
+    - position: [0.500, 0.100, 0.050]
+      time: 0.4
+    - position: [0.480, 0.100, 0.050]
+      time: 0.4
+    - position: [0.460, 0.100, 0.050]
+      time: 0.4
+    - position: [0.440, 0.100, 0.050]
+      time: 0.4
+    - position: [0.420, 0.100, 0.050]
+      time: 0.4
+    - position: [0.400, 0.100, 0.050]
+      time: 0.4
+    - position: [0.380, 0.100, 0.050]
+      time: 0.4
+    - position: [0.360, 0.100, 0.050]
+      time: 0.4
+    - position: [0.340, 0.100, 0.050]
+      time: 0.4
+    - position: [0.320, 0.100, 0.050]
+      time: 0.4
+    - position: [0.300, 0.100, 0.050]
+      time: 0.4
+    - position: [0.319, 0.100, 0.050]
+      time: 0.4
+    - position: [0.338, 0.100, 0.050]
+      time: 0.4
+    - position: [0.356, 0.100, 0.050]
+      time: 0.4
+    - position: [0.375, 0.100, 0.050]
+      time: 0.4
+    - position: [0.394, 0.100, 0.050]
+      time: 0.4
+    - position: [0.412, 0.100, 0.050]
+      time: 0.4
+    - position: [0.431, 0.100, 0.050]
+      time: 0.4
+    - position: [0.450, 0.100, 0.050]
+      time: 0.4
+    - position: [0.450, 0.080, 0.050]
+      time: 0.4
+    - position: [0.450, 0.060, 0.050]
+      time: 0.4
+    - position: [0.450, 0.040, 0.050]
+      time: 0.4
+    - position: [0.450, 0.020, 0.050]
+      time: 0.4
+    - position: [0.450, 0.000, 0.050]
+      time: 0.4
+    - position: [0.450, -0.020, 0.050]
+      time: 0.4
+    - position: [0.450, -0.040, 0.050]
+      time: 0.4
+    - position: [0.450, -0.060, 0.050]
+      time: 0.4
+    - position: [0.450, -0.080, 0.050]
+      time: 0.4
+    - position: [0.450, -0.100, 0.050]
+      time: 0.4
+    - position: [0.471, -0.100, 0.050]
+      time: 0.4
+    - position: [0.493, -0.100, 0.050]
+      time: 0.4
+    - position: [0.514, -0.100, 0.050]
+      time: 0.4
+    - position: [0.536, -0.100, 0.050]
+      time: 0.4
+    - position: [0.557, -0.100, 0.050]
+      time: 0.4
+    - position: [0.579, -0.100, 0.050]
+      time: 0.4
+    - position: [0.600, -0.100, 0.050]
+      time: 0.4
+    - position: [0.580, -0.100, 0.050]
+      time: 0.4
+    - position: [0.560, -0.100, 0.050]
+      time: 0.4
+    - position: [0.540, -0.100, 0.050]
+      time: 0.4
+    - position: [0.520, -0.100, 0.050]
+      time: 0.4
+    - position: [0.500, -0.100, 0.050]
+      time: 0.4
+    - position: [0.480, -0.100, 0.050]
+      time: 0.4
+    - position: [0.460, -0.100, 0.050]
+      time: 0.4
+    - position: [0.440, -0.100, 0.050]
+      time: 0.4
+    - position: [0.420, -0.100, 0.050]
+      time: 0.4
+    - position: [0.400, -0.100, 0.050]
+      time: 0.4
+    - position: [0.380, -0.100, 0.050]
+      time: 0.4
+    - position: [0.360, -0.100, 0.050]
+      time: 0.4
+    - position: [0.340, -0.100, 0.050]
+      time: 0.4
+    - position: [0.320, -0.100, 0.050]
+      time: 0.4
+    - position: [0.300, -0.100, 0.050]
+      time: 0.4

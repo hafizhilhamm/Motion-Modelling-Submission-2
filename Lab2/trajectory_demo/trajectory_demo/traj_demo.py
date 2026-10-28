@@ -113,7 +113,17 @@ class TrajDemo(Node):
 
         self.get_logger().info(f"got traj cfg:\n{self.traj_cfg}")
 
-        # TODO: modify to create a datastructure to store joint positions and cartesian positions along the trajectory
+        # history of the trajectory, one entry per joint state message
+        self.time_hist = []  # seconds since node start
+        self.joint_pos_hist = []
+        self.joint_vel_hist = []
+        self.ee_pos_hist = []
+
+        # cartesian waypoints that were sent, for plotting and for the timer
+        self.waypoint_positions = []
+        self.traj_start_time = None
+        self.traj_duration = None
+        self.start_time = self.get_clock().now()
 
     def joint_state_callback(self, msg: JointState):
         """Callback for the joint states of the robot arm. It will get joint positions and velocities, and eventually the cartesian position of the end-effector and save this. It allows initializes the trajectory once the first joint state message comes through.
@@ -123,24 +133,47 @@ class TrajDemo(Node):
         """
         for i in range(len(msg.name)):
             n = msg.name[i]
+            # joint state order is not guaranteed to match the KDL chain order
+            if n not in self.traj_cfg["joint_names"]:
+                continue
+            idx = self.traj_cfg["joint_names"].index(n)
             pos = msg.position[i]
             vel = msg.velocity[i]
 
-            self.current_joint_position[i] = pos
-            self.current_joint_velocity[i] = vel
+            self.current_joint_position[idx] = pos
+            self.current_joint_velocity[idx] = vel
 
         joint_pos, joint_vel = self.kdl_to_np(
             self.current_joint_position
         ), self.kdl_to_np(self.current_joint_velocity)
-        # TODO: modify to save position and velocities into some array to plot later
 
-        # TODO: modify to save the position of end effector using get_ee_pos_ros
+        now = self.get_clock().now()
+        self.time_hist.append((now - self.start_time).nanoseconds * 1e-9)
+        self.joint_pos_hist.append(joint_pos)
+        self.joint_vel_hist.append(joint_vel)
+
+        ee_pos = self.get_ee_pos_ros()
+        self.ee_pos_hist.append(ee_pos)
 
         # we do this after we have our first callback to have current joint positions
         if not self.created_traj:
             joint_traj = self.create_traj()
             self.traj_publisher.publish(joint_traj)
             self.created_traj = True
+            self.traj_start_time = now
+            return
+
+        # timer: trajectory is done once the end effector is at the last waypoint and has stopped
+        if self.traj_duration is None and ee_pos is not None:
+            dist_to_goal = np.linalg.norm(
+                np.array(ee_pos) - np.array(self.waypoint_positions[-1])
+            )
+            if dist_to_goal < 5e-3 and np.linalg.norm(joint_vel) < 1e-2:
+                self.traj_duration = (now - self.traj_start_time).nanoseconds * 1e-9
+                self.get_logger().info(
+                    f"trajectory finished in {self.traj_duration:.2f} s "
+                    f"(planned {self.goal_times[-1]:.2f} s)"
+                )
 
     def kdl_to_np(self, data: PyKDL.JntArray) -> NDArray:
         """Helper Function to go from KDL arrays to numpy arrays
@@ -166,11 +199,23 @@ class TrajDemo(Node):
         """FK function that uses TF2 ROS to do forward kinematics and return world coordinates of the end effector.
 
         Returns:
-            Tuple[float]: position, 3 dimensional.
+            Tuple[float]: position, 3 dimensional. None if the transform is not available yet.
         """
-        # TODO: Modify this to get current position of the robot's end effector using the TF2 Library
+        try:
+            t = self.tf_buffer.lookup_transform(
+                self.base_link, self.ee_link, rclpy.time.Time()
+            )
+        except TransformException as ex:
+            self.get_logger().debug(
+                f"could not transform {self.base_link} to {self.ee_link}: {ex}"
+            )
+            return None
 
-        pos = [0.0, 0.0, 0.0]
+        pos = [
+            t.transform.translation.x,
+            t.transform.translation.y,
+            t.transform.translation.z,
+        ]
 
         return pos
 
@@ -241,26 +286,62 @@ class TrajDemo(Node):
         for waypoint in cartesian_waypoints:
             pos = waypoint["position"]
             time_sec = waypoint["time"] + time_since_start
-            assert type(time_sec) == float, type(time)
+            assert type(time_sec) == float, type(time_sec)
             assert len(pos) == 3
             goal_times.append(time_sec)
-            time_since_start += time_sec
+            # time_sec is already cumulative
+            time_since_start = time_sec
 
             cur_joint_pos = self.get_joint_pos(cur_joint_pos, pos)
             goal_positions.append(cur_joint_pos)
+            self.waypoint_positions.append(pos)
 
-        # TODO: instantiate a JointTrajectory message, populate it, and publish it via the publisher class member
-        # note, populate the header with the relevant frame id and timestamp, in addition to the trajectory
+        self.goal_times = goal_times
 
         joint_traj = JointTrajectory()
+        joint_traj.header.stamp = self.get_clock().now().to_msg()
+        joint_traj.header.frame_id = self.base_link
+        joint_traj.joint_names = self.traj_cfg["joint_names"]
+
+        for joint_pos, t in zip(goal_positions, goal_times):
+            point = JointTrajectoryPoint()
+            point.positions = [float(q) for q in joint_pos]
+            point.time_from_start = Duration(seconds=t).to_msg()
+            joint_traj.points.append(point)
+
+        self.get_logger().info(
+            f"sending trajectory with {len(joint_traj.points)} points, planned duration {goal_times[-1]:.2f} s"
+        )
         return joint_traj
 
     def plot_joint_traj(self):
         """Helper function to plot the desired results from following the trajectory. Will be called once the process is interupted via a Keyboard Interupt."""
 
-        # TODO: populate this method to use the datastructure you created for joint positions
+        ee_pos = np.array([p for p in self.ee_pos_hist if p is not None])
+        if len(ee_pos) == 0:
+            self.get_logger().warn("no end effector positions recorded, nothing to plot")
+            return
+        waypoints = np.array(self.waypoint_positions)
+
         fig = plt.figure()
         ax = fig.add_subplot(projection="3d")
+        ax.plot(ee_pos[:, 0], ee_pos[:, 1], ee_pos[:, 2], label="end effector (TF2)")
+        ax.scatter(ee_pos[0, 0], ee_pos[0, 1],ee_pos[0, 2], c="g", label="start")
+        ax.scatter(
+            waypoints[:, 0], waypoints[:, 1], waypoints[:, 2], c="r", s=8, label="waypoints"
+        )
+        ax.set_xlabel("x [m]")
+        ax.set_ylabel("y [m]")
+        ax.set_zlabel("z [m]")
+        title = os.path.basename(self.traj_cfg_path)
+        if self.traj_duration is not None:
+            title += f" - {self.traj_duration:.2f} s"
+        ax.set_title(title)
+        ax.legend()
+
+        fig_path = os.path.splitext(os.path.basename(self.traj_cfg_path))[0] + "_plot.png"
+        fig.savefig(fig_path, dpi=200)
+        self.get_logger().info(f"saved plot to {os.path.abspath(fig_path)}")
 
         plt.show()
 

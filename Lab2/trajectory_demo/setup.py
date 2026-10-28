@@ -12,7 +12,12 @@ setup(
         (os.path.join("share/", package_name), ["package.xml"]),
         (
             os.path.join("share/", package_name, "cfg"),
-            ["cfg/ros2_controllers.yaml", "cfg/rviz.rviz", "cfg/traj_waypoints.yaml"],
+            [
+                "cfg/ros2_controllers.yaml",
+                "cfg/rviz.rviz",
+                "cfg/traj_waypoints.yaml",
+                "cfg/traj_letter_H.yaml",
+            ],
         ),
         (os.path.join("share/", package_name, "launch"), ["launch/bringup.launch.py"]),
     ],
