@@ -17,6 +17,8 @@ setup(
                 "cfg/rviz.rviz",
                 "cfg/traj_waypoints.yaml",
                 "cfg/traj_letter_H.yaml",
+                "cfg/traj_letter_D.yaml",
+                "cfg/traj_letter_R.yaml",
             ],
         ),
         (os.path.join("share/", package_name, "launch"), ["launch/bringup.launch.py"]),
